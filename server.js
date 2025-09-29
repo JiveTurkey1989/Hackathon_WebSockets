@@ -20,7 +20,8 @@ app.use(express.json());
 
 // In-memory storage for users, messages, and chat history
 const connectedUsers = new Map();
-const chatHistory = new Map(); // userId -> messages array
+const globalChatHistory = []; // Global chat history for all users
+const userSessions = new Map(); // Track user sessions to prevent duplicate history
 const randomUsers = [];
 const randomImages = [];
 
@@ -145,8 +146,8 @@ app.get('/api/refresh-images', async (req, res) => {
 
 app.get('/api/chat-history/:userId', (req, res) => {
   const userId = req.params.userId;
-  const history = chatHistory.get(userId) || [];
-  res.json(history);
+  // Return global chat history for all users
+  res.json(globalChatHistory);
 });
 
 // Socket.IO connection handling
@@ -165,11 +166,7 @@ io.on('connection', (socket) => {
     };
 
     connectedUsers.set(socket.id, user);
-    
-    // Initialize chat history for new user
-    if (!chatHistory.has(userId)) {
-      chatHistory.set(userId, []);
-    }
+    userSessions.set(socket.id, userId);
 
     // Send user info back to client
     socket.emit('login_success', user);
@@ -178,8 +175,9 @@ io.on('connection', (socket) => {
     const userList = Array.from(connectedUsers.values());
     io.emit('users_update', userList);
 
-    // Send chat history to the user
-    socket.emit('chat_history', chatHistory.get(userId));
+    // Send global chat history to the user (last 50 messages to avoid overload)
+    const recentHistory = globalChatHistory.slice(-50);
+    socket.emit('chat_history', recentHistory);
 
     console.log(`User ${user.name} logged in with ID: ${userId}`);
   });
@@ -200,32 +198,21 @@ io.on('connection', (socket) => {
       recipients: messageData.recipients || [] // for direct messages
     };
 
-    // Store message in chat history for sender
-    const senderHistory = chatHistory.get(user.id) || [];
-    senderHistory.push(message);
-    chatHistory.set(user.id, senderHistory);
+    // Store message in global chat history
+    globalChatHistory.push(message);
+    
+    // Keep only last 200 messages to prevent memory issues
+    if (globalChatHistory.length > 200) {
+      globalChatHistory.shift();
+    }
 
     // If it's a broadcast message (no specific recipients)
     if (!messageData.recipients || messageData.recipients.length === 0) {
-      // Store in all users' chat history
-      connectedUsers.forEach((connectedUser) => {
-        if (connectedUser.id !== user.id) {
-          const userHistory = chatHistory.get(connectedUser.id) || [];
-          userHistory.push(message);
-          chatHistory.set(connectedUser.id, userHistory);
-        }
-      });
-
       // Broadcast to all connected clients
       io.emit('new_message', message);
     } else {
       // Direct message to specific users
       messageData.recipients.forEach(recipientId => {
-        // Store in recipient's chat history
-        const recipientHistory = chatHistory.get(recipientId) || [];
-        recipientHistory.push(message);
-        chatHistory.set(recipientId, recipientHistory);
-
         // Send to recipient if they're online
         const recipientSocket = Array.from(connectedUsers.entries())
           .find(([_, user]) => user.id === recipientId);
@@ -273,12 +260,13 @@ io.on('connection', (socket) => {
       caption: imageData.caption || ''
     };
 
-    // Store in all users' chat history
-    connectedUsers.forEach((connectedUser) => {
-      const userHistory = chatHistory.get(connectedUser.id) || [];
-      userHistory.push(message);
-      chatHistory.set(connectedUser.id, userHistory);
-    });
+    // Store in global chat history
+    globalChatHistory.push(message);
+    
+    // Keep only last 200 messages to prevent memory issues
+    if (globalChatHistory.length > 200) {
+      globalChatHistory.shift();
+    }
 
     // Broadcast to all clients
     io.emit('new_message', message);
@@ -290,6 +278,7 @@ io.on('connection', (socket) => {
     if (user) {
       console.log(`User ${user.name} disconnected`);
       connectedUsers.delete(socket.id);
+      userSessions.delete(socket.id);
       
       // Broadcast updated user list
       const userList = Array.from(connectedUsers.values());
