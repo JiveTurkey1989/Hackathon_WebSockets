@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Application</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1><i class="fas fa-comments"></i> WebSocket Chat</h1>
+            <p>Choose a random user profile to join the chat</p>
+            
+            <div id="userProfiles" class="user-profiles">
+                <!-- Random user profiles will be loaded here -->
+            </div>
+            
+            <div class="manual-login">
+                <h3>Or create your own profile:</h3>
+                <input type="text" id="customName" placeholder="Enter your name" maxlength="30">
+                <input type="url" id="customAvatar" placeholder="Avatar URL (optional)">
+                <button id="customLoginBtn" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Join Chat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Screen -->
+    <div id="chatScreen" class="chat-container" style="display: none;">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="user-info">
+                <img id="currentUserAvatar" src="" alt="Avatar" class="avatar">
+                <span id="currentUserName"></span>
+            </div>
+            <div class="header-controls">
+                <button id="imageGalleryBtn" class="control-btn" title="Browse Images">
+                    <i class="fas fa-images"></i>
+                </button>
+                <button id="logoutBtn" class="control-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h3><i class="fas fa-users"></i> Online Users</h3>
+                <div id="usersList" class="users-list">
+                    <!-- Online users will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area">
+                <div id="messagesContainer" class="messages-container">
+                    <!-- Chat messages will be displayed here -->
+                </div>
+                
+                <div id="typingIndicator" class="typing-indicator" style="display: none;">
+                    <span id="typingUser"></span> is typing...
+                </div>
+
+                <!-- Message Input -->
+                <div class="message-input-container">
+                    <button id="emojiBtn" class="input-btn" title="Emojis">
+                        <i class="fas fa-smile"></i>
+                    </button>
+                    <button id="imageBtn" class="input-btn" title="Send Image">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <input type="text" id="messageInput" placeholder="Type your message..." maxlength="500">
+                    <button id="sendBtn" class="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Gallery Modal -->
+    <div id="imageGalleryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-images"></i> Image Gallery</h3>
+                <button id="closeGalleryBtn" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="imageGallery" class="image-gallery">
+                    <!-- Random images will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="imagePreviewModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Send Image</h3>
+                <button id="closePreviewBtn" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <img id="previewImage" src="" alt="Preview" class="preview-image">
+                <div class="image-caption">
+                    <input type="text" id="imageCaption" placeholder="Add a caption (optional)" maxlength="100">
+                </div>
+                <div class="modal-actions">
+                    <button id="sendImageBtn" class="send-btn">
+                        <i class="fas fa-paper-plane"></i> Send Image
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

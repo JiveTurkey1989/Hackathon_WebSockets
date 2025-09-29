@@ -1,0 +1,13 @@
+**Task**: Create a Chat Program that allows users to send messages between each other.
+
+**Requirements**:
+1. The program must use websockets.
+2. The program must use the following API to get a list of random users https://randomuser.me/api/?results=10
+3. The program must use socket.io to implement the chat https://socket.io/docs/v4/index.html
+4. The program must use the following API to get a list of random images https://picsum.photos/v2/list?page=2&limit=100
+5. The program should have an initial index.html file in the root of the project that you can use as a starting point
+6. Allow users to send and receive messages in real time.
+7. The chat must be accessible via a login screen.
+8. Users must be able to send and receive images from each other.
+9. The program should keep track of chat history for each user.
+10. The program must be built with Node.js utilizing the WS library.
